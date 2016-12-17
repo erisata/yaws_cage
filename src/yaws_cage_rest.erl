@@ -37,7 +37,7 @@
 %%%
 -module(yaws_cage_rest).
 -compile([{parse_transform, lager_transform}]).
--export([out/2, handle_unsupported/4]).
+-export([out/3, handle_unsupported/4, appmod_path/1, serve_file/4, serve_priv_file/4]).
 -include_lib("yaws/include/yaws_api.hrl").
 
 
@@ -51,7 +51,8 @@
 -callback handle_request(
         Path    :: [string()],
         Method  :: atom(),
-        Arg     :: #arg{}
+        Arg     :: #arg{},
+        Opts    :: map()
     ) -> term().
 
 
@@ -61,29 +62,92 @@
 %%% ============================================================================
 
 %%
-%%  Entry point for Yaws appmod.
+%%  This function should be called from the yaws appmod, the Module:out/1 function.
+%%  It will delegate the calls to the Module:handle_request/4 function.
 %%
-out(Module, Arg = #arg{req = Req, client_ip_port = {Ip, _Port}, opaque = Opaque}) ->
+-spec out(
+        Module :: module(),
+        Arg    :: #arg{},
+        Opts   :: #{debug => boolean()}
+    ) ->
+        YawsResponse :: term().
+
+out(Module, Arg = #arg{req = #http_request{method = Method}, client_ip_port = {Ip, Port}}, Opts) ->
     Path = path_tokens(Arg),
-    Method = yaws_api:http_request_method(Req),
-    case lists:member({"yaws_cage_rest_appmod_debug", "true"}, Opaque) of
-        true ->
+    case Opts of
+        #{debug := true} ->
             lager:debug(
-                "Appmod ~p=~p: ip=~p, method=~p, path=~p",
-                [Module, appmod_path(Arg), encode_ip(Ip), Method, Path]
+                "Appmod ~p=~p: ip=~p:~p, method=~p, path=~p",
+                [Module, appmod_path(Arg), encode_ip(Ip), Port, Method, Path]
             );
-        false ->
+        _ ->
             ok
     end,
-    Module:handle_request(Path, Method, Arg).
+    Module:handle_request(Path, Method, Arg, Opts).
 
 
 %%
 %%  Default fallback for unsupported cases.
 %%
-handle_unsupported(Module, Path, Method, Arg) ->
-    respond_unknown(Module, Path, Method, Arg).
+handle_unsupported(Module, Path, Arg, Opts) ->
+    respond_unknown(Module, Path, Arg, Opts).
 
+
+
+%%
+%%  Returns a path, at which the appmod is mounted.
+%%
+%%  <AppmodPath>/<AppmodData> = <PrePath><Appmod>/AppmodData = <ServerPath>
+%%
+appmod_path(#arg{server_path = ServerPath, appmoddata = undefined}) ->
+    ServerPath;
+
+appmod_path(#arg{server_path = ServerPath, appmoddata = "/"}) ->
+    string:substr(ServerPath, 1, length(ServerPath) - 1);
+
+appmod_path(#arg{server_path = ServerPath, appmoddata = AppmodData}) ->
+    string:substr(ServerPath, 1, length(ServerPath) - length(AppmodData) - 1).
+
+
+%%
+%%
+%%
+serve_priv_file(Module, Path, Arg, Opts) ->
+    serve_file(Module, [priv_dir(Module) | Path], Arg, Opts).
+
+
+%%
+%%
+%%
+serve_file(Module, Path, Arg, Opts) ->
+    FileName = filename:join(Path),
+    case file:read_file(FileName) of
+        {ok, Content} ->
+            ContentType = case Opts of
+                #{content_type := ProvidedContentType} -> ProvidedContentType;
+                _                                      -> yaws_api:mime_type(FileName)
+            end,
+            ResponseContent = case Opts of
+                #{variables := Variables} when map_size(Variables) > 0 ->
+                    ReplaceVariable = fun (VarName, VarValue, Binary) ->
+                        binary:replace(Binary, VarName, VarValue, [global])
+                    end,
+                    BinContent = erlang:iolist_to_binary(Content),
+                    maps:fold(ReplaceVariable, BinContent, Variables);
+                _ ->
+                    Content
+            end,
+            [
+                {status, 200},
+                {content, ContentType, ResponseContent}
+            ];
+        {error, enoent} ->
+            respond_unknown(Module, Path, Arg, Opts);
+        {error, eacces} ->
+            respond_error(401, "Insuficient acces rights", Module, Path, Arg);
+        {error, Reason} ->
+            respond_error(400, lists:concat(["Error: ", Reason]), Module, Path, Arg)
+    end.
 
 
 %%% ============================================================================
@@ -120,21 +184,6 @@ path_tokens_normalize(Normalized, [Token | Tokens]) when Token =/= ".." ->
 
 
 %%
-%%  Returns a path, at which the appmod is mounted.
-%%
-%%  <AppmodPath>/<AppmodData> = <PrePath><Appmod>/AppmodData = <ServerPath>
-%%
-appmod_path(#arg{server_path = ServerPath, appmoddata = undefined}) ->
-    ServerPath;
-
-appmod_path(#arg{server_path = ServerPath, appmoddata = "/"}) ->
-    string:substr(ServerPath, 1, length(ServerPath) - 1);
-
-appmod_path(#arg{server_path = ServerPath, appmoddata = AppmodData}) ->
-    string:substr(ServerPath, 1, length(ServerPath) - length(AppmodData) - 1).
-
-
-%%
 %%  Prints IP.
 %%
 encode_ip({One, Two, Three, Four}) ->
@@ -144,18 +193,18 @@ encode_ip({One, Two, Three, Four}) ->
 %%
 %%  Generic method for responding to unknown paths.
 %%
-respond_unknown(Module, Path, 'GET' = Method, _Args) ->
-    respond_error(404, "Unknown resource", Module, Path, Method, '#');
-
-respond_unknown(Module, Path, Method, _Args) ->
-    respond_error(400, "Bad request", Module, Path, Method, '#').
+respond_unknown(Module, Path, 'GET' = Method, Arg = #arg{req = #http_request{method = Method}}) ->
+    case Method of
+        'GET' -> respond_error(404, "Unknown resource", Module, Path, Arg);
+        _     -> respond_error(400, "Bad request",      Module, Path, Arg)
+    end.
 
 
 %%
 %%  Respond to request with error message.
 %%
-respond_error(Status, Message, Module, Path, Method, Args) ->
-    lager:warning(string:concat(Message, " in ~p, path=~p, method=~p, args=~p"), [Module, Path, Method, Args]),
+respond_error(Status, Message, Module, Path, #arg{req = #http_request{method = Method}}) ->
+    lager:warning(string:concat(Message, " in ~p, path=~p, method=~p"), [Module, Path, Method]),
     [
         {status, Status},
         {ehtml, error_html(Status, Message)}
@@ -170,6 +219,22 @@ error_html(_Status, Message) ->
         {h1, [], "ERROR!"},
         {p, [], Message}
     ].
+
+
+%%
+%%  Returns a path to the file in the application's priv directory.
+%%  Application is determined from the module.
+%%
+priv_dir(Module) ->
+    case application:get_application(Module) of
+        {ok, AppName} ->
+            case code:priv_dir(AppName) of
+                {error, bad_name} -> "priv"; % To allow testing without creating whole app.
+                Dir               -> Dir
+            end;
+        undefined ->
+            "priv" % To allow testing without creating whole app.
+    end.
 
 
 
