@@ -25,11 +25,11 @@
 %%%     -include_lib("yaws/include/yaws_api.hrl").
 %%%
 %%%     out(Arg) ->
-%%%         yaws_cage_rest:out(?MODULE, Arg).
+%%%         yaws_cage_rest:out(?MODULE, Arg, _Opts = []).
 %%%
-%%%     handle_request(["check"], 'GET', Arg) ->
+%%%     handle_request(["check"], 'GET', _Arg, _Opts) ->
 %%%         {content, 200, <<"ok!">>};
-%%%     handle_request(Path, Method, Arg) ->
+%%%     handle_request(Path, Method, Arg, _Opts) ->
 %%%         yaws_cage_rest:handle_unsupported(?MODULE, Path, Method, Arg).
 %%%
 %%%
