@@ -193,7 +193,7 @@ encode_ip({One, Two, Three, Four}) ->
 %%
 %%  Generic method for responding to unknown paths.
 %%
-respond_unknown(Module, Path, 'GET' = Method, Arg = #arg{req = #http_request{method = Method}}) ->
+respond_unknown(Module, Path, Arg = #arg{req = #http_request{method = Method}}, _Opts) ->
     case Method of
         'GET' -> respond_error(404, "Unknown resource", Module, Path, Arg);
         _     -> respond_error(400, "Bad request",      Module, Path, Arg)
