@@ -20,18 +20,18 @@
 %%% You can use this module as follows:
 %%%
 %%% ```
-%%%     -module(my_rest).
-%%%     -behaviour(yaws_cage_rest).
-%%%     -export([out/1, handle_request/4]).
-%%%     -include_lib("yaws/include/yaws_api.hrl").
+%%% -module(my_rest).
+%%% -behaviour(yaws_cage_rest).
+%%% -export([out/1, handle_request/4]).
+%%% -include_lib("yaws/include/yaws_api.hrl").
 %%%
-%%%     out(Arg) ->
-%%%         yaws_cage_rest:out(?MODULE, Arg, _Opts = []).
+%%% out(Arg) ->
+%%%     yaws_cage_rest:out(?MODULE, Arg, _Opts = []).
 %%%
-%%%     handle_request(["check"], 'GET', _Arg, _Opts) ->
-%%%         {content, 200, <<"ok!">>};
-%%%     handle_request(Path, Method, Arg, _Opts) ->
-%%%         yaws_cage_rest:handle_unsupported(?MODULE, Path, Method, Arg).
+%%% handle_request(["check"], 'GET', _Arg, _Opts) ->
+%%%     {content, 200, <<"ok!">>};
+%%% handle_request(Path, Method, Arg, _Opts) ->
+%%%     yaws_cage_rest:handle_unsupported(?MODULE, Path, Method, Arg).
 %%% '''
 %%%
 %%% See [http://www.infoq.com/articles/vinoski-erlang-rest].

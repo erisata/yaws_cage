@@ -1,10 +1,13 @@
 
 
-# Utility functions for implementing services as [http://yaws.hyber.org/] appmods. #
+# The `yaws_cage' application #
+
+This application provides various utility functions for
+implementing services as [`http://yaws.hyber.org/`](http://yaws.hyber.org/) appmods.
 
 The approach for implementing REST services is taken
 from [`http://www.infoq.com/articles/vinoski-erlang-rest`](http://www.infoq.com/articles/vinoski-erlang-rest).
-Example usage of yaws_cage_rest:
+Example usage of [`yaws_cage_rest`](http://github.com/erisata/yaws_cage/blob/master/doc/yaws_cage_rest.md) module:
 
 ```
 -module(my_rest).
