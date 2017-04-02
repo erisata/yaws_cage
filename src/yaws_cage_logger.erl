@@ -14,10 +14,10 @@
 %| limitations under the License.
 %\--------------------------------------------------------------------
 
-%%%
+%%% @doc
 %%% Almost empty implementation of the yaws logger and crash handler.
 %%%
-%%% See `logger_mod` and `errormod_crash` options in the `yaws.config`.
+%%% See `logger_mod' and `errormod_crash' options in the `yaws.config'.
 %%%
 -module(yaws_cage_logger).
 -behaviour(yaws_logger).

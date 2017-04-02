@@ -69,12 +69,19 @@ Default fallback for unsupported cases.
 ### out/3 ###
 
 <pre><code>
-out(Module::module(), Arg::#arg{}, Opts::#{debug =&gt; boolean()}) -&gt; YawsResponse::term()
+out(Module::module(), Arg::#arg{}, Opts::#{debug =&gt; boolean(), aggregate_chunks =&gt; boolean()}) -&gt; YawsResponse::term()
 </code></pre>
 <br />
 
 This function should be called from the yaws appmod, the Module:out/1 function.
 It will delegate the calls to the Module:handle_request/4 function.
+
+This function recognizes the following options:
+
+* `debug` -- if set to true, will log request info.
+
+* `aggregate_chunks` -- can be set to false, in order
+to disable automatic aggregation of chunked requests.
 
 <a name="serve_file-4"></a>
 

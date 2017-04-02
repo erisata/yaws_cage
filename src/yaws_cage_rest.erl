@@ -14,11 +14,12 @@
 %| limitations under the License.
 %\--------------------------------------------------------------------
 
-%%%
+%%% @doc
 %%% YAWS Appmod for basic REST services.
 %%%
 %%% You can use this module as follows:
 %%%
+%%% ```
 %%%     -module(my_rest).
 %%%     -behaviour(yaws_cage_rest).
 %%%     -export([out/1, handle_request/4]).
@@ -31,9 +32,9 @@
 %%%         {content, 200, <<"ok!">>};
 %%%     handle_request(Path, Method, Arg, _Opts) ->
 %%%         yaws_cage_rest:handle_unsupported(?MODULE, Path, Method, Arg).
+%%% '''
 %%%
-%%%
-%%% See `http://www.infoq.com/articles/vinoski-erlang-rest`.
+%%% See [http://www.infoq.com/articles/vinoski-erlang-rest].
 %%%
 -module(yaws_cage_rest).
 -compile([{parse_transform, lager_transform}]).
@@ -61,32 +62,82 @@
 %%% API Functions
 %%% ============================================================================
 
-%%
+%%  @doc
 %%  This function should be called from the yaws appmod, the Module:out/1 function.
 %%  It will delegate the calls to the Module:handle_request/4 function.
+%%
+%%  This function recognizes the following options:
+%%
+%%    * `debug' -- if set to true, will log request info.
+%%
+%%    * `aggregate_chunks' -- can be set to false, in order
+%%      to disable automatic aggregation of chunked requests.
 %%
 -spec out(
         Module :: module(),
         Arg    :: #arg{},
-        Opts   :: #{debug => boolean()}
+        Opts   :: #{debug => boolean(), aggregate_chunks => boolean()}
     ) ->
         YawsResponse :: term().
 
-out(Module, Arg = #arg{req = #http_request{method = Method}, client_ip_port = {Ip, Port}}, Opts) ->
-    Path = path_tokens(Arg),
-    case Opts of
-        #{debug := true} ->
-            lager:debug(
-                "Appmod ~p=~p: ip=~p:~p, method=~p, path=~p",
-                [Module, appmod_path(Arg), encode_ip(Ip), Port, Method, Path]
-            );
-        _ ->
-            ok
+out(Module, Arg, Opts) ->
+    HandleRequest = fun (AggrArg = #arg{req = #http_request{method = Method}, client_ip_port = {Ip, Port}}) ->
+        Path = path_tokens(AggrArg),
+        case Opts of
+            #{debug := true} ->
+                lager:debug(
+                    "Appmod ~p=~p: ip=~p:~p, method=~p, path=~p",
+                    [Module, appmod_path(AggrArg), encode_ip(Ip), Port, Method, Path]
+                );
+            _ ->
+                ok
+        end,
+        Module:handle_request(Path, Method, AggrArg, Opts)
     end,
-    Module:handle_request(Path, Method, Arg, Opts).
+    case Opts of
+        #{aggregate_chunks := false} ->
+            HandleRequest(Arg);
+        _ ->
+            aggregate_chunks(Arg, HandleRequest)
+    end.
 
-
+%%  @private
+%%  Aggregates chunked requests.
 %%
+aggregate_chunks(Arg, Out) ->
+    #arg{
+        clidata = CurrentData,
+        state   = Buffer,
+        cont    = Continuation,
+        req     = Request
+    } = Arg,
+    Method = yaws_api:http_request_method(Request),
+    Multipart = case Method of
+        'POST' -> true;
+        'PUT'  -> true;
+        _      -> false
+    end,
+    case {Multipart, CurrentData, Buffer} of
+        {true, {partial, PartialData}, undefined} ->
+            % First chunk of chunked data
+            {get_more, Continuation, [PartialData]};
+        {true, {partial, PartialData}, _} ->
+            % Second, ... one before last part of chunked data
+            {get_more, Continuation, [PartialData | Buffer]};
+        {true, _, undefined} ->
+            % Single part of not chukned data
+            Out(Arg);
+        {true, LastData, _} ->
+            % Last part of chunked data
+            FullData = lists:reverse([LastData | Buffer]),
+            Out(Arg#arg{clidata = FullData});
+        {false, _, _} ->
+            % data cannot be chunked
+            Out(Arg)
+    end.
+
+
+%%  @doc
 %%  Default fallback for unsupported cases.
 %%
 handle_unsupported(Module, Path, Arg, Opts) ->
@@ -94,10 +145,10 @@ handle_unsupported(Module, Path, Arg, Opts) ->
 
 
 
-%%
+%%  @doc
 %%  Returns a path, at which the appmod is mounted.
 %%
-%%  <AppmodPath>/<AppmodData> = <PrePath><Appmod>/AppmodData = <ServerPath>
+%%  `<AppmodPath>/<AppmodData> = <PrePath><Appmod>/AppmodData = <ServerPath>'
 %%
 appmod_path(#arg{server_path = ServerPath, appmoddata = undefined}) ->
     ServerPath;
@@ -109,15 +160,32 @@ appmod_path(#arg{server_path = ServerPath, appmoddata = AppmodData}) ->
     string:substr(ServerPath, 1, length(ServerPath) - length(AppmodData) - 1).
 
 
+%%  @doc
+%%  Serves a file from th application's priv directory.
+%%  The application is determined from the Module.
 %%
-%%
+%%  @see serve_file/4
 %%
 serve_priv_file(Module, Path, Arg, Opts) ->
     serve_file(Module, [priv_dir(Module) | Path], Arg, Opts).
 
 
+%%  @doc
+%%  Serves a specified file from the file system.
 %%
+%%  Module is used here only for error reporting.
 %%
+%%  Path is a relative or absolute path. It can be either
+%%  string or a list of path elements.
+%%
+%%  Opts can have the following:
+%%
+%%    * `content_type' -- the content type of the response.
+%%      It is determined automatically, if not provided.
+%%
+%%    * `variables' -- if non-empty map is provided, it is used
+%%      to perform replacements in the served file (trivial
+%%      template engine).
 %%
 serve_file(Module, Path, Arg, Opts) ->
     FileName = filename:join(Path),
@@ -148,6 +216,7 @@ serve_file(Module, Path, Arg, Opts) ->
         {error, Reason} ->
             respond_error(400, lists:concat(["Error: ", Reason]), Module, Path, Arg)
     end.
+
 
 
 %%% ============================================================================
