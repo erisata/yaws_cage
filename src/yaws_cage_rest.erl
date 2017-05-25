@@ -30,7 +30,7 @@
 %%%
 %%% handle_request(["check"], 'GET', _Arg, _Opts) ->
 %%%     {content, 200, <<"ok!">>};
-%%% handle_request(Path, Method, Arg, Opts) ->
+%%% handle_request(Path, _Method, Arg, Opts) ->
 %%%     yaws_cage_rest:handle_unsupported(?MODULE, Path, Arg, Opts).
 %%% '''
 %%%

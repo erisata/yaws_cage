@@ -1,6 +1,6 @@
 
 
-# The `yaws_cage' application #
+# The yaws_cage application #
 
 This application provides various utility functions for
 implementing services as [`http://yaws.hyber.org/`](http://yaws.hyber.org/) appmods.
@@ -20,8 +20,8 @@ out(Arg) ->
 
 handle_request(["check"], 'GET', _Arg, _Opts) ->
     {content, 200, <<"ok!">>};
-handle_request(Path, Method, Arg, _Opts) ->
-    yaws_cage_rest:handle_unsupported(?MODULE, Path, Method, Arg).
+handle_request(Path, _Method, Arg, Opts) ->
+    yaws_cage_rest:handle_unsupported(?MODULE, Path, Arg, Opts).
 ```
 
 
