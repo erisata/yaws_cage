@@ -150,13 +150,19 @@ handle_unsupported(Module, Path, Arg, Opts) ->
 %%
 %%  `<AppmodPath>/<AppmodData> = <PrePath><Appmod>/AppmodData = <ServerPath>'
 %%
-appmod_path(#arg{server_path = ServerPath, appmoddata = undefined}) ->
+appmod_path(Arg) ->
+    case appmod_path_(Arg) of
+        ""   -> "/";
+        Path -> Path
+    end.
+
+appmod_path_(#arg{server_path = ServerPath, appmoddata = undefined}) ->
     ServerPath;
 
-appmod_path(#arg{server_path = ServerPath, appmoddata = "/"}) ->
+appmod_path_(#arg{server_path = ServerPath, appmoddata = "/"}) ->
     string:substr(ServerPath, 1, length(ServerPath) - 1);
 
-appmod_path(#arg{server_path = ServerPath, appmoddata = AppmodData}) ->
+appmod_path_(#arg{server_path = ServerPath, appmoddata = AppmodData}) ->
     string:substr(ServerPath, 1, length(ServerPath) - length(AppmodData) - 1).
 
 
