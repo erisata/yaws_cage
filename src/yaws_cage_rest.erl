@@ -147,23 +147,28 @@ handle_unsupported(Module, Path, Arg, Opts) ->
 
 %%  @doc
 %%  Returns a path, at which the appmod is mounted.
+%%  The path is always returned with / at the end.
 %%
 %%  `<AppmodPath>/<AppmodData> = <PrePath><Appmod>/AppmodData = <ServerPath>'
 %%
 appmod_path(Arg) ->
     case appmod_path_(Arg) of
         ""   -> "/";
-        Path -> Path
+        Path ->
+          case lists:last(Path) of
+              $/ -> Path;
+              _  -> Path ++ "/"
+          end
     end.
 
 appmod_path_(#arg{server_path = ServerPath, appmoddata = undefined}) ->
-    ServerPath;
+    ServerPath ++ "/";
 
 appmod_path_(#arg{server_path = ServerPath, appmoddata = "/"}) ->
-    string:substr(ServerPath, 1, length(ServerPath) - 1);
+    ServerPath;
 
 appmod_path_(#arg{server_path = ServerPath, appmoddata = AppmodData}) ->
-    string:substr(ServerPath, 1, length(ServerPath) - length(AppmodData) - 1).
+    string:substr(ServerPath, 1, length(ServerPath) - length(AppmodData)).
 
 
 %%  @doc
