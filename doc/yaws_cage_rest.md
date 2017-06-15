@@ -53,6 +53,7 @@ Serves a file from th application's priv directory.</td></tr></table>
 `appmod_path(Arg) -> any()`
 
 Returns a path, at which the appmod is mounted.
+The path is always returned with / at the end.
 
 `<AppmodPath>/<AppmodData> = <PrePath><Appmod>/AppmodData = <ServerPath>`
 
