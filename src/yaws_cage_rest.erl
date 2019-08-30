@@ -76,7 +76,7 @@
 -spec out(
         Module :: module(),
         Arg    :: #arg{},
-        Opts   :: #{debug => boolean(), aggregate_chunks => boolean()}
+        Opts   :: #{debug => boolean(), aggregate_chunks => boolean(), handle_exceptions => boolean()}
     ) ->
         YawsResponse :: term().
 
@@ -92,7 +92,21 @@ out(Module, Arg, Opts) ->
             _ ->
                 ok
         end,
-        Module:handle_request(Path, Method, AggrArg, Opts)
+        case maps:get(handle_exceptions, Opts, true) of
+            true ->
+                try
+                    Module:handle_request(Path, Method, AggrArg, Opts)
+                catch
+                    ErrClass:ErrReason:ErrTrace ->
+                        lager:error(
+                            "Appmod ~p=~p: ip=~p:~p, method=~p, path=~p failed, reason=~p:~p, trace=~p",
+                            [Module, appmod_path(AggrArg), encode_ip(Ip), Port, Method, Path, ErrClass, ErrReason, ErrTrace]
+                        ),
+                        respond_error(500, "Internal server error, see logs for more details.", Module, Path, Arg)
+                end;
+            false ->
+                Module:handle_request(Path, Method, AggrArg, Opts)
+        end
     end,
     case Opts of
         #{aggregate_chunks := false} ->
