@@ -38,7 +38,14 @@
 %%%
 -module(yaws_cage_rest).
 -compile([{parse_transform, lager_transform}]).
--export([out/3, handle_unsupported/4, appmod_path/1, serve_file/4, serve_priv_file/4]).
+-export([
+    out/3,
+    handle_unsupported/4,
+    appmod_path/1,
+    serve_file/4,
+    serve_priv_file/4,
+    path_tokens_normalize/1
+]).
 -include_lib("yaws/include/yaws_api.hrl").
 
 
@@ -243,21 +250,6 @@ serve_file(Module, Path, Arg, Opts) ->
     end.
 
 
-
-%%% ============================================================================
-%%% Internal functions
-%%% ============================================================================
-
-%%
-%%  Returns path tokens, that are under the appmod path.
-%%
-path_tokens(#arg{appmoddata = undefined}) ->
-    [];
-
-path_tokens(#arg{appmoddata = AppmodUri}) ->
-    path_tokens_normalize(string:tokens(AppmodUri, "/")).
-
-
 %%
 %%  Checks path for the path_traversal attack.
 %%
@@ -275,6 +267,20 @@ path_tokens_normalize([_ | Normalized], [".." | Tokens]) ->
 
 path_tokens_normalize(Normalized, [Token | Tokens]) when Token =/= ".." ->
     path_tokens_normalize([Token | Normalized], Tokens).
+
+
+%%% ============================================================================
+%%% Internal functions
+%%% ============================================================================
+
+%%
+%%  Returns path tokens, that are under the appmod path.
+%%
+path_tokens(#arg{appmoddata = undefined}) ->
+    [];
+
+path_tokens(#arg{appmoddata = AppmodUri}) ->
+    path_tokens_normalize(string:tokens(AppmodUri, "/")).
 
 
 %%

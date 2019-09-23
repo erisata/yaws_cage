@@ -10,3 +10,5 @@ rel/example_project
 .rebar
 doc/erlang.png
 doc/stylesheet.css
+.idea
+yaws_cage.iml
