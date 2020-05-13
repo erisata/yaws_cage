@@ -37,7 +37,7 @@ See [`http://www.infoq.com/articles/vinoski-erlang-rest`](http://www.infoq.com/a
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#appmod_path-1">appmod_path/1</a></td><td>
 Returns a path, at which the appmod is mounted.</td></tr><tr><td valign="top"><a href="#handle_unsupported-4">handle_unsupported/4</a></td><td>
 Default fallback for unsupported cases.</td></tr><tr><td valign="top"><a href="#out-3">out/3</a></td><td>
-This function should be called from the yaws appmod, the Module:out/1 function.</td></tr><tr><td valign="top"><a href="#serve_file-4">serve_file/4</a></td><td>
+This function should be called from the yaws appmod, the Module:out/1 function.</td></tr><tr><td valign="top"><a href="#path_tokens_normalize-1">path_tokens_normalize/1</a></td><td></td></tr><tr><td valign="top"><a href="#serve_file-4">serve_file/4</a></td><td>
 Serves a specified file from the file system.</td></tr><tr><td valign="top"><a href="#serve_priv_file-4">serve_priv_file/4</a></td><td>
 Serves a file from th application's priv directory.</td></tr></table>
 
@@ -70,7 +70,7 @@ Default fallback for unsupported cases.
 ### out/3 ###
 
 <pre><code>
-out(Module::module(), Arg::#arg{}, Opts::#{debug =&gt; boolean(), aggregate_chunks =&gt; boolean()}) -&gt; YawsResponse::term()
+out(Module::module(), Arg::#arg{}, Opts::#{debug =&gt; boolean(), aggregate_chunks =&gt; boolean(), handle_exceptions =&gt; boolean()}) -&gt; YawsResponse::term()
 </code></pre>
 <br />
 
@@ -83,6 +83,12 @@ This function recognizes the following options:
 
 * `aggregate_chunks` -- can be set to false, in order
 to disable automatic aggregation of chunked requests.
+
+<a name="path_tokens_normalize-1"></a>
+
+### path_tokens_normalize/1 ###
+
+`path_tokens_normalize(Tokens) -> any()`
 
 <a name="serve_file-4"></a>
 

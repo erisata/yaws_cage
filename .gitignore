@@ -1,4 +1,5 @@
 .eunit
+_build/
 deps
 *.o
 *.beam
@@ -8,6 +9,7 @@ ebin
 rel/example_project
 .concrete/DEV_MODE
 .rebar
+.rebar3/
 doc/erlang.png
 doc/stylesheet.css
 .idea
