@@ -70,7 +70,9 @@ Then a testcase use it as follows (see the `yaws_cage_rest` behaviour):
 
 
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#ct_end-1">ct_end/1</a></td><td>
-Stop the servers, if they were started,.</td></tr><tr><td valign="top"><a href="#ct_init-2">ct_init/2</a></td><td></td></tr><tr><td valign="top"><a href="#ct_init-3">ct_init/3</a></td><td>
+Stop the servers, if they were started,.</td></tr><tr><td valign="top"><a href="#ct_init-2">ct_init/2</a></td><td>
+Similar to ct_init/2, except that allows to start yaws
+listeners at several ports with different appmods.</td></tr><tr><td valign="top"><a href="#ct_init-3">ct_init/3</a></td><td>
 Start the Yaws server at the specified port with the specified appmods.</td></tr></table>
 
 
@@ -93,7 +95,13 @@ Stop the servers, if they were started,
 
 ### ct_init/2 ###
 
-`ct_init(PortAppModMap, Config) -> any()`
+<pre><code>
+ct_init(PortAppModMap::#{integer() =&gt; [{string(), module()}]}, Config::list()) -&gt; NewConfig::list()
+</code></pre>
+<br />
+
+Similar to ct_init/2, except that allows to start yaws
+listeners at several ports with different appmods.
 
 <a name="ct_init-3"></a>
 

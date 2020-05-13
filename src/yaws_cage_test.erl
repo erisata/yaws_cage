@@ -66,6 +66,17 @@
 ct_init(Port, AppMods, Config) ->
     ct_init(#{Port => AppMods}, Config).
 
+
+%%  @doc
+%%  Similar to ct_init/2, except that allows to start yaws
+%%  listeners at several ports with different appmods.
+%%
+-spec ct_init(
+        PortAppModMap :: #{integer() => [{string(), module()}]},
+        Config        :: list()
+    ) ->
+        NewConfig :: list().
+
 ct_init(PortAppModMap, Config) ->
     ServerId = erlang:atom_to_list(?MODULE),
     PrivDir = proplists:get_value(priv_dir, Config),
