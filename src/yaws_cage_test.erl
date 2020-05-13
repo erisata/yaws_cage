@@ -33,7 +33,7 @@
 %%%     ok = yaws_cage_test:ct_end(Config),
 %%%     ok = meck:unload(my_app_mock_some_path).
 %%% '''
-%%% Then a testcase use it as follows (see the `yaws_cage_rest' behaviour):
+%%% Then a testcase use it as follows (see the {@link yaws_cage_rest} behaviour):
 %%% ```
 %%% test_something(Config) ->
 %%%     ok = meck:expect(my_app_mock_some_path, handle_request, fun (["resource"], 'GET', _Arg, _Opts) ->
@@ -54,7 +54,7 @@
 
 %%  @doc
 %%  Start the Yaws server at the specified port with the specified appmods.
-%%  Intended to be used in CT init_per_suite, end_per_suite.
+%%  Intended to be used in CT `init_per_suite/1', `end_per_suite/1'.
 %%
 -spec ct_init(
         Port    :: integer(),
@@ -68,8 +68,8 @@ ct_init(Port, AppMods, Config) ->
 
 
 %%  @doc
-%%  Similar to ct_init/2, except that allows to start yaws
-%%  listeners at several ports with different appmods.
+%%  Similar to {@link ct_init/2}, except that allows to start yaws
+%%  listeners at several ports with sets of different appmods.
 %%
 -spec ct_init(
         PortAppModMap :: #{integer() => [{string(), module()}]},
@@ -103,7 +103,8 @@ ct_init(PortAppModMap, Config) ->
 
 
 %%  @doc
-%%  Stop the servers, if they were started,
+%%  Stop all the Yaws listeners, if they were started.
+%%  The Yaws application itself is left as running to avoid unnecessary noice in the logs.
 %%
 -spec ct_end(
         Config  :: list()

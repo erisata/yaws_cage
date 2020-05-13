@@ -47,7 +47,7 @@ Typically, the mock server will be initialized as follows (in CT):
        ok = meck:unload(my_app_mock_some_path).
 ```
 
-Then a testcase use it as follows (see the `yaws_cage_rest` behaviour):
+Then a testcase use it as follows (see the [`yaws_cage_rest`](yaws_cage_rest.md) behaviour):
 
 ```
    test_something(Config) ->
@@ -70,9 +70,9 @@ Then a testcase use it as follows (see the `yaws_cage_rest` behaviour):
 
 
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#ct_end-1">ct_end/1</a></td><td>
-Stop the servers, if they were started,.</td></tr><tr><td valign="top"><a href="#ct_init-2">ct_init/2</a></td><td>
-Similar to ct_init/2, except that allows to start yaws
-listeners at several ports with different appmods.</td></tr><tr><td valign="top"><a href="#ct_init-3">ct_init/3</a></td><td>
+Stop all the Yaws listeners, if they were started.</td></tr><tr><td valign="top"><a href="#ct_init-2">ct_init/2</a></td><td>
+Similar to <a href="#ct_init-2"><code>ct_init/2</code></a>, except that allows to start yaws
+listeners at several ports with sets of different appmods.</td></tr><tr><td valign="top"><a href="#ct_init-3">ct_init/3</a></td><td>
 Start the Yaws server at the specified port with the specified appmods.</td></tr></table>
 
 
@@ -89,7 +89,8 @@ ct_end(Config::list()) -&gt; ok
 </code></pre>
 <br />
 
-Stop the servers, if they were started,
+Stop all the Yaws listeners, if they were started.
+The Yaws application itself is left as running to avoid unnecessary noice in the logs.
 
 <a name="ct_init-2"></a>
 
@@ -100,8 +101,8 @@ ct_init(PortAppModMap::#{integer() =&gt; [{string(), module()}]}, Config::list()
 </code></pre>
 <br />
 
-Similar to ct_init/2, except that allows to start yaws
-listeners at several ports with different appmods.
+Similar to [`ct_init/2`](#ct_init-2), except that allows to start yaws
+listeners at several ports with sets of different appmods.
 
 <a name="ct_init-3"></a>
 
@@ -113,5 +114,5 @@ ct_init(Port::integer(), AppMods::[{string(), module()}], Config::list()) -&gt; 
 <br />
 
 Start the Yaws server at the specified port with the specified appmods.
-Intended to be used in CT init_per_suite, end_per_suite.
+Intended to be used in CT `init_per_suite/1`, `end_per_suite/1`.
 
