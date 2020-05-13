@@ -51,6 +51,7 @@ Then a testcase use it as follows (see the [`yaws_cage_rest`](yaws_cage_rest.md)
 
 ```
    test_something(Config) ->
+       ok = meck:reset(my_app_mock_some_path),
        ok = meck:expect(my_app_mock_some_path, handle_request, fun (["resource"], 'GET', _Arg, _Opts) ->
           [{status, 200}, {content, "text/plain", <<"OK!">>}]
        end),
