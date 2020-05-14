@@ -22,21 +22,23 @@
 %%% Typically, the mock server will be initialized as follows (in CT):
 %%% ```
 %%% init_per_suite(Config) ->
-%%%     ok = meck:new(my_app_mock_some_path, [non_strict, no_link]),
+%%%     yaws_cage_test:ct_init(#{8090 => [
+%%%         {"/MOCK/some_path", my_app_mock_some_path} % Non existing module.
+%%%     ]}, Config).
+%%% end_per_suite(Config) ->
+%%%     ok = yaws_cage_test:ct_end(Config).
+%%% init_per_testcase(_TestCase, Config) ->
+%%%     ok = meck:new(my_app_mock_some_path, [non_strict]),
 %%%     ok = meck:expect(my_app_mock_some_path, out, fun (Arg) ->
 %%%         yaws_cage_rest:out(my_app_mock_some_path, Arg, #{debug => true})
 %%%     end),
-%%%     yaws_cage_test:ct_init(#{8090 => [
-%%%         {"/MOCK/some_path", my_app_mock_some_path}
-%%%     ]}, Config).
-%%% end_per_suite(Config) ->
-%%%     ok = yaws_cage_test:ct_end(Config),
+%%%     Config.
+%%% end_per_testcase(_TestCase, _Config) ->
 %%%     ok = meck:unload(my_app_mock_some_path).
 %%% '''
 %%% Then a testcase use it as follows (see the {@link yaws_cage_rest} behaviour):
 %%% ```
 %%% test_something(Config) ->
-%%%     ok = meck:reset(my_app_mock_some_path),
 %%%     ok = meck:expect(my_app_mock_some_path, handle_request, fun (["resource"], 'GET', _Arg, _Opts) ->
 %%%        [{status, 200}, {content, "text/plain", <<"OK!">>}]
 %%%     end),
@@ -98,7 +100,14 @@ ct_init(PortAppModMap, Config) ->
         ])
         || {Port, AppMods} <- maps:to_list(PortAppModMap)
     ],
-    ok = yaws_api:setconf(GConf, SConf),
+    case yaws_api:setconf(GConf, SConf) of
+        ok ->
+            ok;
+        {error, need_restart} ->
+            _ = application:stop(yaws),
+            ok = yaws:start_embedded(DocRoot, [], [], ServerId),
+            ok = yaws_api:setconf(GConf, SConf)
+    end,
     ct:pal("Yaws server started at localhost, appmods: ~p~n", [PortAppModMap]),
     [{yaws_cage_test_server_id, ServerId} | Config].
 
