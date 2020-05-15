@@ -55,6 +55,13 @@
 -module(yaws_cage_test).
 -export([ct_init/3, ct_init/2, ct_end/1]).
 
+-ignore_xref([
+    {?MODULE, ct_init, 2},    % Public API.
+    {?MODULE, ct_init, 3},    % Public API.
+    {?MODULE, ct_end, 1}      % Public API.
+]).
+
+
 %%  @doc
 %%  Start the Yaws server at the specified port with the specified appmods.
 %%  Intended to be used in CT `init_per_suite/1', `end_per_suite/1'.

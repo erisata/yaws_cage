@@ -1,6 +1,6 @@
-REBAR=rebar
+REBAR=rebar3
 
-all: compile-all
+all: compile
 
 deps:
 	$(REBAR) get-deps
@@ -8,24 +8,27 @@ deps:
 compile:
 	$(REBAR) compile
 
-compile-all:
-	$(REBAR) compile --recursive
+check: test xref
 
-check: test
-
-test: compile
+test:
 	mkdir -p logs
-	env ERL_LIBS=deps ERL_AFLAGS='-config test/sys -s lager' $(REBAR) eunit skip_deps=true verbose=1
+	$(REBAR) eunit verbose=1
 
-doc:
-	$(REBAR) doc
+xref:
+	$(REBAR) xref
 
-clean: clean-itest
+doc: edoc
+docs: edoc
+edoc:
+	$(REBAR) edoc
+
+clean:
+	$(REBAR) clean skip_deps=true
+
+clean-all:
+	rm -rf .eunit
 	$(REBAR) clean
 
-clean-all: clean-itest
-	$(REBAR) clean --recursive
-
-.PHONY: all deps compile compile-all check test itest doc clean clean-all clean-itest
+.PHONY: all deps compile compile check test xref doc clean clean-all
 
 

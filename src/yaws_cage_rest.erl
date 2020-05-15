@@ -49,6 +49,17 @@
 -include_lib("yaws/include/yaws_api.hrl").
 
 
+-ignore_xref([
+    {?MODULE, appmod_path, 1},              % Public API.
+    {?MODULE, handle_unsupported, 4},       % Default callback for unsupported cases.
+    {?MODULE, out, 3},                      % Public API.
+    {?MODULE, path_tokens_normalize, 1},    % Public API.
+    {?MODULE, serve_file, 4},               % Public API.
+    {?MODULE, serve_priv_file, 4},          % Public API.
+    {?MODULE, behaviour_info, 1}            %
+]).
+
+
 %%% ============================================================================
 %%% Callback definitions.
 %%% ============================================================================
@@ -159,7 +170,7 @@ aggregate_chunks(Arg, Out) ->
 
 
 %%  @doc
-%%  Default fallback for unsupported cases.
+%%  Default callback for unsupported cases.
 %%
 handle_unsupported(Module, Path, Arg, Opts) ->
     respond_unknown(Module, Path, Arg, Opts).

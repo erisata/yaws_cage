@@ -28,6 +28,10 @@
 -include_lib("yaws/include/yaws_api.hrl").
 
 
+-ignore_xref([
+    {?MODULE, crashmsg, 3}           % Callback for errormod_crash.
+]).
+
 %%% ============================================================================
 %%% Callbacks for yaws_logger
 %%% ============================================================================
